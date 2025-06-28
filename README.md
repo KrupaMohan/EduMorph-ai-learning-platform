@@ -30,10 +30,6 @@ EduMorph is a full-stack web application that personalizes learning content for 
 ### AI Integration
 - OpenAI GPT API
 
-### Hosting
-- Vercel (Frontend)
-- Render (Backend + ML Services)
-
 ## Project Structure
 
 ```
