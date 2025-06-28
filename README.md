@@ -11,7 +11,7 @@ EduMorph is a full-stack web application that personalizes learning content for 
 - **GPT-Powered Doubt Solving Chatbot** - OpenAI API-based natural language support
 - **Sentiment-Based Feedback Engine** - Analyzes feedback to improve recommendations
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 - HTML5
