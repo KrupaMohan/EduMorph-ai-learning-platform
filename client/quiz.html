@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Style Quiz - EduMorph</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="glass-effect rounded-2xl p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">
+                        <i class="fas fa-question-circle mr-2"></i>Learning Style Quiz
+                    </h1>
+                    <p class="text-white/80 text-sm">Help us understand how you learn best</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-white text-sm" id="userInfo"></div>
+                    <div class="text-white/60 text-xs" id="progressText"></div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="mt-4 bg-white/20 rounded-full h-2">
+                <div class="bg-white rounded-full h-2 progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Container -->
+        <div class="glass-effect rounded-2xl p-8" id="quizContainer">
+            <div id="questionContainer" class="text-center">
+                <h2 class="text-xl font-semibold text-white mb-6" id="questionText"></h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="optionsContainer">
+                    <!-- Options will be populated here -->
+                </div>
+            </div>
+
+            <div id="loadingContainer" class="hidden text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p class="text-white">Analyzing your learning style...</p>
+            </div>
+
+            <div id="resultContainer" class="hidden text-center">
+                <div class="mb-6">
+                    <i class="fas fa-lightbulb text-4xl text-yellow-400 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-white mb-2" id="resultTitle"></h2>
+                    <p class="text-white/80" id="resultDescription"></p>
+                </div>
+                
+                <div class="bg-white/10 rounded-lg p-4 mb-6">
+                    <h3 class="text-white font-semibold mb-2">Your Learning Characteristics:</h3>
+                    <ul class="text-white/80 text-sm space-y-1" id="characteristicsList">
+                    </ul>
+                </div>
+
+                <button 
+                    onclick="proceedToDashboard()"
+                    class="bg-white text-purple-600 py-3 px-8 rounded-lg font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg"
+                >
+                    <i class="fas fa-arrow-right mr-2"></i>Continue to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz questions for learning style classification
+        const quizQuestions = [
+            {
+                question: "When studying for an exam, I prefer to:",
+                options: [
+                    { text: "Read textbooks and take detailed notes", style: "visual" },
+                    { text: "Listen to recorded lectures or discuss with others", style: "auditory" },
+                    { text: "Create flashcards and move around while studying", style: "kinesthetic" }
+                ]
+            },
+            {
+                question: "When learning a new skill, I learn best by:",
+                options: [
+                    { text: "Watching demonstrations or videos", style: "visual" },
+                    { text: "Having someone explain it to me step by step", style: "auditory" },
+                    { text: "Trying it out myself with hands-on practice", style: "kinesthetic" }
+                ]
+            },
+            {
+                question: "When solving problems, I typically:",
+                options: [
+                    { text: "Draw diagrams or visualize the problem", style: "visual" },
+                    { text: "Talk through the problem out loud", style: "auditory" },
+                    { text: "Use physical objects or move around to think", style: "kinesthetic" }
+                ]
+            },
+            {
+                question: "In a classroom setting, I prefer:",
+                options: [
+                    { text: "Visual aids like charts, graphs, and presentations", style: "visual" },
+                    { text: "Lectures and group discussions", style: "auditory" },
+                    { text: "Interactive activities and hands-on projects", style: "kinesthetic" }
+                ]
+            },
+            {
+                question: "When remembering information, I rely on:",
+                options: [
+                    { text: "Mental pictures and visual associations", style: "visual" },
+                    { text: "Rhymes, songs, or verbal repetition", style: "auditory" },
+                    { text: "Physical movement or writing things down", style: "kinesthetic" }
+                ]
+            }
+        ];
+
+        let currentQuestion = 0;
+        let answers = [];
+        let user = null;
+
+        // Learning style results
+        const learningStyles = {
+            visual: {
+                title: "Visual Learner",
+                description: "You learn best through visual aids, diagrams, and written information.",
+                characteristics: [
+                    "Prefer to see information in charts, graphs, and diagrams",
+                    "Learn well from videos, presentations, and demonstrations",
+                    "Remember information better when it's written down",
+                    "Like to take detailed notes and use color coding",
+                    "Think in pictures and visual patterns"
+                ]
+            },
+            auditory: {
+                title: "Auditory Learner",
+                description: "You learn best through listening, speaking, and verbal communication.",
+                characteristics: [
+                    "Learn effectively through lectures and discussions",
+                    "Remember information better when it's spoken",
+                    "Enjoy group discussions and verbal explanations",
+                    "May read aloud or talk to yourself while studying",
+                    "Prefer audio recordings and verbal instructions"
+                ]
+            },
+            kinesthetic: {
+                title: "Kinesthetic Learner",
+                description: "You learn best through hands-on experience and physical activity.",
+                characteristics: [
+                    "Learn by doing and experiencing things firsthand",
+                    "Prefer interactive activities and experiments",
+                    "Remember information better when physically engaged",
+                    "May fidget or move around while thinking",
+                    "Enjoy building, creating, and manipulating objects"
+                ]
+            }
+        };
+
+        // Initialize quiz
+        function initQuiz() {
+            user = JSON.parse(localStorage.getItem('edumorph_user'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('userInfo').textContent = `Welcome, ${user.name}!`;
+            showQuestion();
+        }
+
+        // Show current question
+        function showQuestion() {
+            const question = quizQuestions[currentQuestion];
+            document.getElementById('questionText').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'bg-white/20 hover:bg-white/30 text-white p-4 rounded-lg text-left transition-all duration-300 border border-white/30 hover:border-white/50';
+                button.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="text-lg font-semibold mr-3">${String.fromCharCode(65 + index)}</span>
+                        <span>${option.text}</span>
+                    </div>
+                `;
+                button.onclick = () => selectOption(option.style);
+                optionsContainer.appendChild(button);
+            });
+
+            updateProgress();
+        }
+
+        // Handle option selection
+        function selectOption(style) {
+            answers.push(style);
+            currentQuestion++;
+
+            if (currentQuestion < quizQuestions.length) {
+                showQuestion();
+            } else {
+                showLoading();
+                setTimeout(() => {
+                    analyzeResults();
+                }, 2000);
+            }
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = (currentQuestion / quizQuestions.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `Question ${currentQuestion + 1} of ${quizQuestions.length}`;
+        }
+
+        // Show loading state
+        function showLoading() {
+            document.getElementById('questionContainer').classList.add('hidden');
+            document.getElementById('loadingContainer').classList.remove('hidden');
+        }
+
+        // Analyze quiz results
+        function analyzeResults() {
+            // Count responses for each learning style
+            const counts = { visual: 0, auditory: 0, kinesthetic: 0 };
+            answers.forEach(answer => counts[answer]++);
+            
+            // Determine dominant learning style
+            const dominantStyle = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+            
+            // Store results
+            const userData = {
+                ...user,
+                learningStyle: dominantStyle,
+                quizAnswers: answers,
+                quizCompleted: new Date().toISOString()
+            };
+            localStorage.setItem('edumorph_user', JSON.stringify(userData));
+
+            // Show results
+            showResults(dominantStyle);
+        }
+
+        // Show quiz results
+        function showResults(style) {
+            const result = learningStyles[style];
+            
+            document.getElementById('loadingContainer').classList.add('hidden');
+            document.getElementById('resultContainer').classList.remove('hidden');
+            
+            document.getElementById('resultTitle').textContent = result.title;
+            document.getElementById('resultDescription').textContent = result.description;
+            
+            const characteristicsList = document.getElementById('characteristicsList');
+            characteristicsList.innerHTML = '';
+            result.characteristics.forEach(char => {
+                const li = document.createElement('li');
+                li.innerHTML = `<i class="fas fa-check mr-2 text-green-400"></i>${char}`;
+                characteristicsList.appendChild(li);
+            });
+        }
+
+        // Proceed to dashboard
+        function proceedToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initQuiz);
+    </script>
+</body>
+</html> 

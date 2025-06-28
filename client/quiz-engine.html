@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Quiz - EduMorph</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        .option-card {
+            transition: all 0.3s ease;
+        }
+        .option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .option-card.selected {
+            background: rgba(59, 130, 246, 0.3);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+        .option-card.correct {
+            background: rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+        .option-card.incorrect {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="glass-effect rounded-2xl p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">
+                        <i class="fas fa-question-circle mr-2"></i>Adaptive Quiz
+                    </h1>
+                    <p class="text-white/80 text-sm">Test your knowledge with difficulty-adjusted questions</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-white text-sm" id="userInfo"></div>
+                    <div class="text-white/60 text-xs" id="difficultyInfo"></div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="mt-4 bg-white/20 rounded-full h-2">
+                <div class="bg-white rounded-full h-2 progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Quiz Container -->
+        <div class="glass-effect rounded-2xl p-8" id="quizContainer">
+            <div id="questionContainer" class="text-center">
+                <div class="mb-6">
+                    <span class="inline-block bg-white/20 text-white text-xs px-3 py-1 rounded-full mb-4">
+                        Question <span id="questionNumber">1</span> of <span id="totalQuestions">10</span>
+                    </span>
+                    <h2 class="text-xl font-semibold text-white mb-4" id="questionText"></h2>
+                    <div class="text-white/60 text-sm mb-6" id="questionCategory"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="optionsContainer">
+                    <!-- Options will be populated here -->
+                </div>
+
+                <div class="mt-8">
+                    <button 
+                        id="submitBtn"
+                        onclick="submitAnswer()"
+                        disabled
+                        class="bg-white text-purple-600 py-3 px-8 rounded-lg font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    >
+                        <i class="fas fa-check mr-2"></i>Submit Answer
+                    </button>
+                </div>
+            </div>
+
+            <div id="resultContainer" class="hidden text-center">
+                <div class="mb-6">
+                    <i class="fas fa-trophy text-4xl text-yellow-400 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-white mb-2" id="resultTitle"></h2>
+                    <p class="text-white/80 mb-4" id="resultMessage"></p>
+                </div>
+                
+                <div class="bg-white/10 rounded-lg p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-white" id="scoreDisplay"></div>
+                            <div class="text-white/60 text-sm">Score</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-white" id="correctAnswers"></div>
+                            <div class="text-white/60 text-sm">Correct</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-white" id="newDifficulty"></div>
+                            <div class="text-white/60 text-sm">New Level</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-x-4">
+                    <button 
+                        onclick="startNewQuiz()"
+                        class="bg-white text-purple-600 py-3 px-8 rounded-lg font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg"
+                    >
+                        <i class="fas fa-redo mr-2"></i>Take Another Quiz
+                    </button>
+                    <button 
+                        onclick="goToDashboard()"
+                        class="bg-white/20 text-white py-3 px-8 rounded-lg font-semibold hover:bg-white/30 transform hover:scale-105 transition-all duration-300"
+                    >
+                        <i class="fas fa-home mr-2"></i>Back to Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Quiz questions by difficulty level
+        const quizQuestions = {
+            easy: [
+                {
+                    question: "What is the capital of France?",
+                    options: ["London", "Berlin", "Paris", "Madrid"],
+                    correct: 2,
+                    category: "Geography"
+                },
+                {
+                    question: "Which planet is closest to the Sun?",
+                    options: ["Venus", "Mars", "Mercury", "Earth"],
+                    correct: 2,
+                    category: "Science"
+                },
+                {
+                    question: "What is 2 + 2?",
+                    options: ["3", "4", "5", "6"],
+                    correct: 1,
+                    category: "Mathematics"
+                },
+                {
+                    question: "Who wrote 'Romeo and Juliet'?",
+                    options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
+                    correct: 1,
+                    category: "Literature"
+                },
+                {
+                    question: "What is the largest ocean on Earth?",
+                    options: ["Atlantic", "Indian", "Arctic", "Pacific"],
+                    correct: 3,
+                    category: "Geography"
+                }
+            ],
+            medium: [
+                {
+                    question: "What is the chemical symbol for gold?",
+                    options: ["Ag", "Au", "Fe", "Cu"],
+                    correct: 1,
+                    category: "Chemistry"
+                },
+                {
+                    question: "In which year did World War II end?",
+                    options: ["1943", "1944", "1945", "1946"],
+                    correct: 2,
+                    category: "History"
+                },
+                {
+                    question: "What is the square root of 144?",
+                    options: ["10", "11", "12", "13"],
+                    correct: 2,
+                    category: "Mathematics"
+                },
+                {
+                    question: "Which programming language was created by Guido van Rossum?",
+                    options: ["Java", "Python", "C++", "JavaScript"],
+                    correct: 1,
+                    category: "Technology"
+                },
+                {
+                    question: "What is the largest mammal in the world?",
+                    options: ["African Elephant", "Blue Whale", "Giraffe", "Polar Bear"],
+                    correct: 1,
+                    category: "Biology"
+                }
+            ],
+            hard: [
+                {
+                    question: "What is the speed of light in meters per second?",
+                    options: ["299,792,458", "199,792,458", "399,792,458", "499,792,458"],
+                    correct: 0,
+                    category: "Physics"
+                },
+                {
+                    question: "Who discovered penicillin?",
+                    options: ["Alexander Fleming", "Louis Pasteur", "Robert Koch", "Joseph Lister"],
+                    correct: 0,
+                    category: "Biology"
+                },
+                {
+                    question: "What is the derivative of x²?",
+                    options: ["x", "2x", "x²", "2x²"],
+                    correct: 1,
+                    category: "Mathematics"
+                },
+                {
+                    question: "Which element has the atomic number 1?",
+                    options: ["Helium", "Hydrogen", "Lithium", "Carbon"],
+                    correct: 1,
+                    category: "Chemistry"
+                },
+                {
+                    question: "In which year was the first iPhone released?",
+                    options: ["2005", "2006", "2007", "2008"],
+                    correct: 2,
+                    category: "Technology"
+                }
+            ]
+        };
+
+        let currentQuestion = 0;
+        let currentDifficulty = 'medium';
+        let selectedAnswer = null;
+        let correctAnswers = 0;
+        let totalQuestions = 5;
+        let user = null;
+        let currentQuiz = [];
+
+        // Initialize quiz
+        function initQuiz() {
+            user = JSON.parse(localStorage.getItem('edumorph_user'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('userInfo').textContent = `Welcome, ${user.name}!`;
+            startQuiz();
+        }
+
+        // Start a new quiz
+        function startQuiz() {
+            currentQuestion = 0;
+            correctAnswers = 0;
+            selectedAnswer = null;
+            
+            // Get questions for current difficulty
+            currentQuiz = [...quizQuestions[currentDifficulty]];
+            shuffleArray(currentQuiz);
+            currentQuiz = currentQuiz.slice(0, totalQuestions);
+            
+            document.getElementById('difficultyInfo').textContent = `Difficulty: ${currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1)}`;
+            document.getElementById('totalQuestions').textContent = totalQuestions;
+            
+            showQuestion();
+        }
+
+        // Show current question
+        function showQuestion() {
+            const question = currentQuiz[currentQuestion];
+            document.getElementById('questionNumber').textContent = currentQuestion + 1;
+            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('questionCategory').textContent = question.category;
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-card bg-white/20 hover:bg-white/30 text-white p-4 rounded-lg text-left transition-all duration-300 border border-white/30 hover:border-white/50';
+                button.innerHTML = `
+                    <div class="flex items-center">
+                        <span class="text-lg font-semibold mr-3">${String.fromCharCode(65 + index)}</span>
+                        <span>${option}</span>
+                    </div>
+                `;
+                button.onclick = () => selectOption(index, button);
+                optionsContainer.appendChild(button);
+            });
+
+            document.getElementById('submitBtn').disabled = true;
+            updateProgress();
+        }
+
+        // Handle option selection
+        function selectOption(index, button) {
+            // Remove previous selection
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select new option
+            button.classList.add('selected');
+            selectedAnswer = index;
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        // Submit answer
+        function submitAnswer() {
+            if (selectedAnswer === null) return;
+
+            const question = currentQuiz[currentQuestion];
+            const isCorrect = selectedAnswer === question.correct;
+            
+            if (isCorrect) {
+                correctAnswers++;
+            }
+
+            // Show correct/incorrect feedback
+            const options = document.querySelectorAll('.option-card');
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === selectedAnswer && !isCorrect) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            // Disable submit button
+            document.getElementById('submitBtn').disabled = true;
+
+            // Wait and move to next question
+            setTimeout(() => {
+                currentQuestion++;
+                if (currentQuestion < currentQuiz.length) {
+                    showQuestion();
+                } else {
+                    showResults();
+                }
+            }, 2000);
+        }
+
+        // Update progress bar
+        function updateProgress() {
+            const progress = (currentQuestion / currentQuiz.length) * 100;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+
+        // Show quiz results
+        function showResults() {
+            const score = Math.round((correctAnswers / currentQuiz.length) * 100);
+            const newDifficulty = calculateNewDifficulty(score);
+            
+            document.getElementById('questionContainer').classList.add('hidden');
+            document.getElementById('resultContainer').classList.remove('hidden');
+            
+            document.getElementById('resultTitle').textContent = score >= 80 ? 'Excellent!' : score >= 60 ? 'Good Job!' : 'Keep Learning!';
+            document.getElementById('resultMessage').textContent = `You answered ${correctAnswers} out of ${currentQuiz.length} questions correctly.`;
+            document.getElementById('scoreDisplay').textContent = `${score}%`;
+            document.getElementById('correctAnswers').textContent = `${correctAnswers}/${currentQuiz.length}`;
+            document.getElementById('newDifficulty').textContent = newDifficulty.charAt(0).toUpperCase() + newDifficulty.slice(1);
+
+            // Update user progress
+            updateUserProgress(score, newDifficulty);
+        }
+
+        // Calculate new difficulty based on performance
+        function calculateNewDifficulty(score) {
+            if (score >= 80) {
+                if (currentDifficulty === 'easy') return 'medium';
+                if (currentDifficulty === 'medium') return 'hard';
+                return 'hard';
+            } else if (score >= 60) {
+                return currentDifficulty;
+            } else {
+                if (currentDifficulty === 'hard') return 'medium';
+                if (currentDifficulty === 'medium') return 'easy';
+                return 'easy';
+            }
+        }
+
+        // Update user progress
+        function updateUserProgress(score, newDifficulty) {
+            const userData = {
+                ...user,
+                quizHistory: user.quizHistory || [],
+                currentDifficulty: newDifficulty
+            };
+
+            userData.quizHistory.push({
+                date: new Date().toISOString(),
+                score: score,
+                difficulty: currentDifficulty,
+                questionsAnswered: currentQuiz.length,
+                correctAnswers: correctAnswers
+            });
+
+            localStorage.setItem('edumorph_user', JSON.stringify(userData));
+        }
+
+        // Start new quiz
+        function startNewQuiz() {
+            currentDifficulty = user.currentDifficulty || 'medium';
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('questionContainer').classList.remove('hidden');
+            startQuiz();
+        }
+
+        // Go to dashboard
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Utility function to shuffle array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initQuiz);
+    </script>
+</body>
+</html> 

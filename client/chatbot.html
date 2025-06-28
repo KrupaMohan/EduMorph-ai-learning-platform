@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot - EduMorph</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+        }
+        .message {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .typing-indicator {
+            display: none;
+        }
+        .typing-indicator.show {
+            display: flex;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen p-4">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="glass-effect rounded-2xl p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">
+                        <i class="fas fa-robot mr-2"></i>AI Learning Assistant
+                    </h1>
+                    <p class="text-white/80 text-sm">Ask questions and get personalized help</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-white/80 text-sm" id="userInfo"></span>
+                    <button onclick="goToDashboard()" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fas fa-home"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="glass-effect rounded-2xl p-6 mb-6">
+            <div class="chat-container mb-4" id="chatContainer">
+                <!-- Welcome message -->
+                <div class="message mb-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                            <i class="fas fa-robot text-white text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="bg-white/20 rounded-lg p-3 text-white">
+                                <p>Hello! I'm your AI learning assistant. I can help you with:</p>
+                                <ul class="mt-2 text-sm space-y-1">
+                                    <li>• Explaining complex concepts</li>
+                                    <li>• Answering questions about any subject</li>
+                                    <li>• Providing study tips and strategies</li>
+                                    <li>• Helping with problem-solving</li>
+                                </ul>
+                                <p class="mt-2 text-sm">What would you like to learn about today?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing indicator -->
+            <div class="typing-indicator mb-4" id="typingIndicator">
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <i class="fas fa-robot text-white text-sm"></i>
+                    </div>
+                    <div class="bg-white/20 rounded-lg p-3">
+                        <div class="flex space-x-1">
+                            <div class="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                            <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                            <div class="w-2 h-2 bg-white rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input area -->
+            <div class="flex space-x-3">
+                <input 
+                    type="text" 
+                    id="messageInput"
+                    placeholder="Type your question here..."
+                    class="flex-1 bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent"
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button 
+                    onclick="sendMessage()"
+                    id="sendButton"
+                    class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg"
+                >
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="glass-effect rounded-2xl p-6 mb-6">
+            <h3 class="text-lg font-semibold text-white mb-4">
+                <i class="fas fa-lightning-bolt mr-2"></i>Quick Questions
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <button onclick="askQuickQuestion('What are the best study techniques for visual learners?')" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-left transition-all duration-300">
+                    <i class="fas fa-eye mr-2"></i>Visual Learning Tips
+                </button>
+                <button onclick="askQuickQuestion('How can I improve my memory retention?')" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-left transition-all duration-300">
+                    <i class="fas fa-brain mr-2"></i>Memory Techniques
+                </button>
+                <button onclick="askQuickQuestion('What are effective time management strategies for students?')" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-left transition-all duration-300">
+                    <i class="fas fa-clock mr-2"></i>Time Management
+                </button>
+                <button onclick="askQuickQuestion('How can I stay motivated while studying?')" class="bg-white/20 hover:bg-white/30 text-white p-3 rounded-lg text-left transition-all duration-300">
+                    <i class="fas fa-fire mr-2"></i>Motivation Tips
+                </button>
+            </div>
+        </div>
+
+        <!-- Feedback Section -->
+        <div class="glass-effect rounded-2xl p-6">
+            <h3 class="text-lg font-semibold text-white mb-4">
+                <i class="fas fa-comment-dots mr-2"></i>Session Feedback
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-white text-sm font-medium mb-2">How helpful was this session?</label>
+                    <div class="flex space-x-2">
+                        <button onclick="rateSession(1)" class="feedback-btn bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-all duration-300">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button onclick="rateSession(2)" class="feedback-btn bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-all duration-300">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button onclick="rateSession(3)" class="feedback-btn bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-all duration-300">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button onclick="rateSession(4)" class="feedback-btn bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-all duration-300">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <button onclick="rateSession(5)" class="feedback-btn bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-all duration-300">
+                            <i class="fas fa-star"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="feedbackText" class="block text-white text-sm font-medium mb-2">Additional comments:</label>
+                    <textarea 
+                        id="feedbackText"
+                        placeholder="Share your thoughts about this learning session..."
+                        class="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent resize-none"
+                        rows="3"
+                    ></textarea>
+                </div>
+                
+                <button 
+                    onclick="submitFeedback()"
+                    class="bg-white text-purple-600 py-3 px-6 rounded-lg font-semibold hover:bg-white/90 transform hover:scale-105 transition-all duration-300 shadow-lg"
+                >
+                    <i class="fas fa-paper-plane mr-2"></i>Submit Feedback
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let user = null;
+        let sessionRating = 0;
+        let chatHistory = [];
+
+        // Sample AI responses (in a real app, this would be replaced with actual API calls)
+        const aiResponses = {
+            "visual learning": "For visual learners, I recommend using mind maps, diagrams, and color-coded notes. Try creating visual associations and using flashcards with images. Watching educational videos and using infographics can also be very effective for your learning style.",
+            "memory": "To improve memory retention, try the spaced repetition technique, create mnemonic devices, and practice active recall. Getting enough sleep, staying hydrated, and regular exercise also significantly boost memory.",
+            "time management": "Effective time management for students includes using the Pomodoro Technique (25-minute focused sessions), creating a study schedule, prioritizing tasks, and eliminating distractions. Break large tasks into smaller, manageable chunks.",
+            "motivation": "To stay motivated while studying, set specific goals, reward yourself for achievements, study with friends, and remind yourself of your long-term objectives. Take regular breaks and maintain a positive mindset.",
+            "default": "That's an interesting question! I'd be happy to help you with that. Could you provide more specific details so I can give you the most relevant and helpful response?"
+        };
+
+        // Initialize chatbot
+        function initChatbot() {
+            user = JSON.parse(localStorage.getItem('edumorph_user'));
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            document.getElementById('userInfo').textContent = `Welcome, ${user.name}!`;
+        }
+
+        // Handle key press in input
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Send message
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Show typing indicator
+            showTypingIndicator();
+
+            // Simulate AI response (in real app, this would be an API call)
+            setTimeout(() => {
+                hideTypingIndicator();
+                const response = generateAIResponse(message);
+                addMessage(response, 'ai');
+            }, 1500 + Math.random() * 1000);
+        }
+
+        // Add message to chat
+        function addMessage(message, sender) {
+            const container = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message mb-4';
+
+            const isUser = sender === 'user';
+            const icon = isUser ? 'fas fa-user' : 'fas fa-robot';
+            const bgColor = isUser ? 'bg-green-500' : 'bg-blue-500';
+            const messageBg = isUser ? 'bg-green-500/20' : 'bg-white/20';
+
+            messageDiv.innerHTML = `
+                <div class="flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}">
+                    <div class="w-8 h-8 ${bgColor} rounded-full flex items-center justify-center">
+                        <i class="${icon} text-white text-sm"></i>
+                    </div>
+                    <div class="flex-1 ${isUser ? 'text-right' : ''}">
+                        <div class="${messageBg} rounded-lg p-3 text-white inline-block ${isUser ? 'ml-auto' : ''}">
+                            <p>${message}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+
+            // Store in chat history
+            chatHistory.push({ sender, message, timestamp: new Date().toISOString() });
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').classList.add('show');
+            document.getElementById('sendButton').disabled = true;
+        }
+
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').classList.remove('show');
+            document.getElementById('sendButton').disabled = false;
+        }
+
+        // Generate AI response
+        function generateAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('visual') || lowerMessage.includes('visual learning')) {
+                return aiResponses.visual;
+            } else if (lowerMessage.includes('memory') || lowerMessage.includes('retention')) {
+                return aiResponses.memory;
+            } else if (lowerMessage.includes('time') || lowerMessage.includes('management')) {
+                return aiResponses.time;
+            } else if (lowerMessage.includes('motivation') || lowerMessage.includes('motivated')) {
+                return aiResponses.motivation;
+            } else {
+                return aiResponses.default;
+            }
+        }
+
+        // Ask quick question
+        function askQuickQuestion(question) {
+            document.getElementById('messageInput').value = question;
+            sendMessage();
+        }
+
+        // Rate session
+        function rateSession(rating) {
+            sessionRating = rating;
+            
+            // Update visual feedback
+            document.querySelectorAll('.feedback-btn').forEach((btn, index) => {
+                if (index < rating) {
+                    btn.classList.add('bg-yellow-400', 'text-yellow-900');
+                    btn.classList.remove('bg-white/20', 'text-white');
+                } else {
+                    btn.classList.remove('bg-yellow-400', 'text-yellow-900');
+                    btn.classList.add('bg-white/20', 'text-white');
+                }
+            });
+        }
+
+        // Submit feedback
+        function submitFeedback() {
+            const feedbackText = document.getElementById('feedbackText').value.trim();
+            
+            if (sessionRating === 0) {
+                alert('Please rate your session before submitting feedback.');
+                return;
+            }
+
+            // Store feedback
+            const feedback = {
+                rating: sessionRating,
+                comment: feedbackText,
+                chatHistory: chatHistory,
+                timestamp: new Date().toISOString(),
+                user: user.name
+            };
+
+            // In a real app, this would be sent to the backend
+            console.log('Feedback submitted:', feedback);
+            
+            // Show success message
+            alert('Thank you for your feedback! It helps us improve your learning experience.');
+            
+            // Reset form
+            sessionRating = 0;
+            document.getElementById('feedbackText').value = '';
+            document.querySelectorAll('.feedback-btn').forEach(btn => {
+                btn.classList.remove('bg-yellow-400', 'text-yellow-900');
+                btn.classList.add('bg-white/20', 'text-white');
+            });
+        }
+
+        // Navigation
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initChatbot);
+    </script>
+</body>
+</html> 

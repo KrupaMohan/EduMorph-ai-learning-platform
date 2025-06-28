@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EduMorph</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .content-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-effect p-4 mb-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-brain text-2xl text-white mr-3"></i>
+                <h1 class="text-xl font-bold text-white">EduMorph</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-white/80 text-sm" id="userInfo"></span>
+                <button onclick="logout()" class="text-white/80 hover:text-white transition-colors">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-4">
+        <!-- Welcome Section -->
+        <div class="glass-effect rounded-2xl p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2" id="welcomeTitle"></h2>
+                    <p class="text-white/80" id="welcomeMessage"></p>
+                </div>
+                <div class="text-right">
+                    <div class="text-white/60 text-sm">Learning Style</div>
+                    <div class="text-white font-semibold" id="learningStyleDisplay"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <button onclick="navigateTo('quiz-engine.html')" class="glass-effect rounded-xl p-6 content-card">
+                <div class="text-center">
+                    <i class="fas fa-question-circle text-3xl text-blue-400 mb-3"></i>
+                    <h3 class="text-white font-semibold mb-2">Take Quiz</h3>
+                    <p class="text-white/60 text-sm">Test your knowledge with adaptive questions</p>
+                </div>
+            </button>
+            
+            <button onclick="navigateTo('chatbot.html')" class="glass-effect rounded-xl p-6 content-card">
+                <div class="text-center">
+                    <i class="fas fa-robot text-3xl text-green-400 mb-3"></i>
+                    <h3 class="text-white font-semibold mb-2">AI Chat</h3>
+                    <p class="text-white/60 text-sm">Get help from our intelligent assistant</p>
+                </div>
+            </button>
+            
+            <button onclick="showProgress()" class="glass-effect rounded-xl p-6 content-card">
+                <div class="text-center">
+                    <i class="fas fa-chart-line text-3xl text-purple-400 mb-3"></i>
+                    <h3 class="text-white font-semibold mb-2">Progress</h3>
+                    <p class="text-white/60 text-sm">View your learning journey</p>
+                </div>
+            </button>
+        </div>
+
+        <!-- Personalized Content -->
+        <div class="glass-effect rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-6">
+                <i class="fas fa-star mr-2"></i>Personalized Content for You
+            </h3>
+            
+            <div id="contentContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div id="progressModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-2xl p-6 max-w-md w-full mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-white">Your Progress</h3>
+                <button onclick="closeProgress()" class="text-white/60 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="progressContent" class="text-white/80">
+                <!-- Progress content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let user = null;
+        let learningStyle = null;
+
+        // Personalized content for each learning style
+        const contentData = {
+            visual: {
+                title: "Visual Learning Dashboard",
+                message: "We've curated visual content to match your learning preferences. Explore diagrams, videos, and interactive visualizations.",
+                content: [
+                    {
+                        title: "Interactive Mind Maps",
+                        description: "Visual organization of concepts with drag-and-drop functionality",
+                        icon: "fas fa-sitemap",
+                        color: "text-blue-400",
+                        type: "interactive"
+                    },
+                    {
+                        title: "Video Tutorials",
+                        description: "Step-by-step visual guides with animations and demonstrations",
+                        icon: "fas fa-play-circle",
+                        color: "text-red-400",
+                        type: "video"
+                    },
+                    {
+                        title: "Infographic Library",
+                        description: "Rich visual representations of complex topics",
+                        icon: "fas fa-chart-pie",
+                        color: "text-green-400",
+                        type: "infographic"
+                    },
+                    {
+                        title: "Diagram Builder",
+                        description: "Create your own visual diagrams and flowcharts",
+                        icon: "fas fa-draw-polygon",
+                        color: "text-purple-400",
+                        type: "tool"
+                    },
+                    {
+                        title: "Visual Flashcards",
+                        description: "Image-based flashcards with visual mnemonics",
+                        icon: "fas fa-images",
+                        color: "text-yellow-400",
+                        type: "study"
+                    },
+                    {
+                        title: "Color-Coded Notes",
+                        description: "Organized note-taking with visual hierarchy",
+                        icon: "fas fa-palette",
+                        color: "text-pink-400",
+                        type: "notes"
+                    }
+                ]
+            },
+            auditory: {
+                title: "Auditory Learning Dashboard",
+                message: "We've prepared audio-rich content to match your learning preferences. Listen to lectures, discussions, and audio explanations.",
+                content: [
+                    {
+                        title: "Audio Lectures",
+                        description: "Comprehensive audio lessons with clear explanations",
+                        icon: "fas fa-headphones",
+                        color: "text-blue-400",
+                        type: "audio"
+                    },
+                    {
+                        title: "Podcast Series",
+                        description: "Educational podcasts on various topics",
+                        icon: "fas fa-podcast",
+                        color: "text-green-400",
+                        type: "podcast"
+                    },
+                    {
+                        title: "Discussion Groups",
+                        description: "Join live discussions and group conversations",
+                        icon: "fas fa-users",
+                        color: "text-purple-400",
+                        type: "discussion"
+                    },
+                    {
+                        title: "Audio Summaries",
+                        description: "Quick audio summaries of key concepts",
+                        icon: "fas fa-volume-up",
+                        color: "text-red-400",
+                        type: "summary"
+                    },
+                    {
+                        title: "Verbal Quizzes",
+                        description: "Audio-based quiz questions and answers",
+                        icon: "fas fa-microphone",
+                        color: "text-yellow-400",
+                        type: "quiz"
+                    },
+                    {
+                        title: "Language Learning",
+                        description: "Pronunciation guides and language practice",
+                        icon: "fas fa-language",
+                        color: "text-pink-400",
+                        type: "language"
+                    }
+                ]
+            },
+            kinesthetic: {
+                title: "Kinesthetic Learning Dashboard",
+                message: "We've designed hands-on activities to match your learning preferences. Engage with interactive simulations and physical activities.",
+                content: [
+                    {
+                        title: "Interactive Simulations",
+                        description: "Hands-on virtual experiments and simulations",
+                        icon: "fas fa-gamepad",
+                        color: "text-blue-400",
+                        type: "simulation"
+                    },
+                    {
+                        title: "Physical Activities",
+                        description: "Movement-based learning exercises",
+                        icon: "fas fa-running",
+                        color: "text-green-400",
+                        type: "activity"
+                    },
+                    {
+                        title: "Building Projects",
+                        description: "Create and construct physical models",
+                        icon: "fas fa-hammer",
+                        color: "text-purple-400",
+                        type: "project"
+                    },
+                    {
+                        title: "Hands-on Labs",
+                        description: "Virtual laboratory experiments",
+                        icon: "fas fa-flask",
+                        color: "text-red-400",
+                        type: "lab"
+                    },
+                    {
+                        title: "Interactive Games",
+                        description: "Educational games with physical interaction",
+                        icon: "fas fa-dice",
+                        color: "text-yellow-400",
+                        type: "game"
+                    },
+                    {
+                        title: "Movement Exercises",
+                        description: "Learning through physical movement and dance",
+                        icon: "fas fa-music",
+                        color: "text-pink-400",
+                        type: "movement"
+                    }
+                ]
+            }
+        };
+
+        // Initialize dashboard
+        function initDashboard() {
+            user = JSON.parse(localStorage.getItem('edumorph_user'));
+            if (!user || !user.learningStyle) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            learningStyle = user.learningStyle;
+            displayUserInfo();
+            displayContent();
+        }
+
+        // Display user information
+        function displayUserInfo() {
+            document.getElementById('userInfo').textContent = `Welcome, ${user.name}!`;
+            document.getElementById('welcomeTitle').textContent = contentData[learningStyle].title;
+            document.getElementById('welcomeMessage').textContent = contentData[learningStyle].message;
+            document.getElementById('learningStyleDisplay').textContent = learningStyle.charAt(0).toUpperCase() + learningStyle.slice(1);
+        }
+
+        // Display personalized content
+        function displayContent() {
+            const container = document.getElementById('contentContainer');
+            container.innerHTML = '';
+
+            contentData[learningStyle].content.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'glass-effect rounded-xl p-6 content-card cursor-pointer';
+                card.innerHTML = `
+                    <div class="text-center">
+                        <i class="${item.icon} text-3xl ${item.color} mb-3"></i>
+                        <h4 class="text-white font-semibold mb-2">${item.title}</h4>
+                        <p class="text-white/60 text-sm">${item.description}</p>
+                        <div class="mt-4">
+                            <span class="inline-block bg-white/20 text-white text-xs px-2 py-1 rounded-full">
+                                ${item.type}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                card.onclick = () => openContent(item);
+                container.appendChild(card);
+            });
+        }
+
+        // Open content (placeholder for now)
+        function openContent(item) {
+            alert(`Opening ${item.title} - This feature will be implemented in the full version!`);
+        }
+
+        // Navigation functions
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        function logout() {
+            localStorage.removeItem('edumorph_user');
+            window.location.href = 'index.html';
+        }
+
+        // Progress modal functions
+        function showProgress() {
+            const modal = document.getElementById('progressModal');
+            const content = document.getElementById('progressContent');
+            
+            // Generate progress content
+            const progressData = {
+                quizzesTaken: Math.floor(Math.random() * 10) + 1,
+                averageScore: Math.floor(Math.random() * 30) + 70,
+                timeSpent: Math.floor(Math.random() * 120) + 30,
+                topicsCovered: Math.floor(Math.random() * 15) + 5
+            };
+
+            content.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex justify-between">
+                        <span>Quizzes Taken:</span>
+                        <span class="font-semibold">${progressData.quizzesTaken}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Average Score:</span>
+                        <span class="font-semibold">${progressData.averageScore}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Time Spent:</span>
+                        <span class="font-semibold">${progressData.timeSpent} minutes</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Topics Covered:</span>
+                        <span class="font-semibold">${progressData.topicsCovered}</span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-white/20">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-white mb-1">${progressData.averageScore}%</div>
+                            <div class="text-white/60 text-sm">Overall Progress</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeProgress() {
+            const modal = document.getElementById('progressModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('progressModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeProgress();
+            }
+        });
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html> 
