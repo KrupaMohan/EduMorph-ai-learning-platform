@@ -2,7 +2,7 @@
 
 EduMorph is a full-stack web application that personalizes learning content for each user in real-time based on their learning style, quiz progress, and feedback sentiment.
 
-## 🚀 Features
+## Features
 
 - **Home/Login Page** - Simple user authentication with localStorage
 - **Learning Style Classifier** - Multi-question quiz using Python ML API
@@ -34,7 +34,7 @@ EduMorph is a full-stack web application that personalizes learning content for 
 - Vercel (Frontend)
 - Render (Backend + ML Services)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 EduMorph/
@@ -57,7 +57,7 @@ EduMorph/
 └── README.md                   # Documentation
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js (v16+)
@@ -118,7 +118,7 @@ EduMorph/
    - Open `client/index.html` in your browser
    - Or serve with a local server: `python -m http.server 8000`
 
-## 🎯 Usage
+## Usage
 
 1. **Login**: Enter your name to get started
 2. **Take Learning Style Quiz**: Answer questions to determine your learning style
@@ -127,7 +127,7 @@ EduMorph/
 5. **Chat with AI**: Ask questions and get instant help
 6. **Provide Feedback**: Share your experience to improve recommendations
 
-## 🔧 API Endpoints
+## API Endpoints
 
 ### User Management
 - `POST /api/users/login` - User login
@@ -147,7 +147,7 @@ EduMorph/
 - `POST /api/chatbot/query` - Send message to AI chatbot
 - `POST /api/chatbot/feedback` - Submit session feedback
 
-## 🚀 Deployment
+## Deployment
 
 ### Frontend (Vercel)
 1. Connect your GitHub repository to Vercel
@@ -167,7 +167,7 @@ EduMorph/
 2. Set Python runtime
 3. Deploy
 
-## 📊 Sample Data
+## Sample Data
 
 The application includes sample content for:
 - Learning style quiz questions
@@ -175,22 +175,9 @@ The application includes sample content for:
 - Adaptive quiz questions
 - Chatbot responses
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Submit a pull request
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## 🔗 Live Demo
-
-- **Frontend**: [EduMorph on Vercel](https://edumorph.vercel.app)
-- **Backend API**: [EduMorph API on Render](https://edumorph-api.onrender.com)
-
-## 📞 Support
-
-For support and questions, please open an issue on GitHub or contact the development team. 
